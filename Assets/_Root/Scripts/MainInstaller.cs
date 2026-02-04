@@ -1,6 +1,7 @@
 namespace MineSweeper
 {
     using Gameplay;
+    using Input;
     using UnityEngine;
     using Zenject;
 
@@ -8,6 +9,8 @@ namespace MineSweeper
     {
         [SerializeField]
         private GridService gridService;
+        [SerializeField]
+        private InputToCellService inputToCellService;
         
         private static readonly string SettingsPath = "Settings";
         private static readonly string GridSettingsPath = SettingsPath + "/GridSettings";
@@ -25,7 +28,11 @@ namespace MineSweeper
 
         private void Bind()
         {
+            Container.BindInterfacesAndSelfTo<InputProvider>().AsSingle();
+            
             Container.Bind<GridService>().FromInstance(gridService).AsSingle();
+            Container.Bind<InputToCellService>().FromInstance(inputToCellService).AsSingle();
+            Container.Bind<OpenCellService>().AsSingle();
         }
     }
 }

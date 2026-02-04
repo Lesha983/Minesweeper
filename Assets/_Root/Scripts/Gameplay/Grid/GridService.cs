@@ -16,6 +16,9 @@ namespace MineSweeper.Gameplay
         private Transform cellsParent;
         
         public bool MinesGenerated => _minesGenerated;
+        public float CellSize => 1f;
+        public Transform CellsParent => cellsParent;
+        public GridCell[,] Grid => _grid;
         
         private GridCell[,] _grid;
         private int _width;
@@ -69,6 +72,31 @@ namespace MineSweeper.Gameplay
             _minesGenerated = true;
         }
 
+        // public void TryOpenNeighbours(int x, int y)
+        // {
+        //     var cell = _grid[x,y];
+        //     if(cell.State != CellState.Empty)
+        //         return;
+        //     
+        //     for (var dx = -1; dx <= 1; dx++)
+        //     {
+        //         for (var dy = -1; dy <= 1; dy++)
+        //         {
+        //             if (dx == 0 && dy == 0)
+        //                 continue;
+        //                     
+        //             var nx = x + dx;
+        //             var ny = y + dy;
+        //             if(nx < 0 || ny < 0 || nx >= _width || ny >= _height)
+        //                 continue;
+        //                     
+        //             var cell = _grid[x + dx, y + dy];
+        //             if (cell.State == CellState.Mine)
+        //                 count++;
+        //         }
+        //     }
+        // }
+
         private void Awake()
         {
             CreateGrid();
@@ -103,8 +131,9 @@ namespace MineSweeper.Gameplay
                                 count++;
                         }
                     }
-                    
-                    gridCell.SetNumericState(count);
+
+                    if (count > 0)
+                        gridCell.SetNumericState(count);
                 }
             }
         }

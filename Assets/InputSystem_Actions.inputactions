@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
@@ -916,7 +917,7 @@
                     "name": "",
                     "id": "47c2a644-3ebc-4dae-a106-589b7ca75b59",
                     "path": "<Touchscreen>/touch*/press",
-                    "interactions": "",
+                    "interactions": "Tap",
                     "processors": "",
                     "groups": "Touch",
                     "action": "Click",
@@ -949,7 +950,7 @@
                     "name": "",
                     "id": "4c191405-5738-4d4b-a523-c6a301dbf754",
                     "path": "<Mouse>/rightButton",
-                    "interactions": "",
+                    "interactions": "Tap",
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "RightClick",

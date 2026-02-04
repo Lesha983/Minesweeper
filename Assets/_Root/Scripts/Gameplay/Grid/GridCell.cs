@@ -1,6 +1,5 @@
 namespace MineSweeper.Gameplay
 {
-    using System;
     using TMPro;
     using UnityEngine;
 
@@ -10,7 +9,7 @@ namespace MineSweeper.Gameplay
         Mine,
         Numeric,
     }
-    
+
     public class GridCell : MonoBehaviour
     {
         [SerializeField] 
@@ -23,14 +22,27 @@ namespace MineSweeper.Gameplay
         private SpriteRenderer flagSprite;
         
         public CellState State => _state;
+        public bool IsOpen => _isOpen;
+        public bool IsFlagged => _isFlagged;
+        public Vector2Int GridPosition => _position;
         
         private CellState _state;
         private bool _isFlagged;
+        private bool _isOpen;
         private Vector2Int _position;
 
         public void Setup(int x, int y)
         {
             _position = new Vector2Int(x, y);
+            _isOpen = false;
+            _isFlagged = false;
+            _state = CellState.Empty;
+            
+            mineIndicatorLabel.gameObject.SetActive(false);
+            mineSprite.gameObject.SetActive(false);
+            flagSprite.gameObject.SetActive(false);
+            
+            capSprite.gameObject.SetActive(true);
         }
         
         public void SetMineState()
@@ -46,13 +58,22 @@ namespace MineSweeper.Gameplay
             mineIndicatorLabel.gameObject.SetActive(true);
         }
 
-        private void Awake()
+        public void Open()
         {
-            mineIndicatorLabel.gameObject.SetActive(false);
-            mineSprite.gameObject.SetActive(false);
-            flagSprite.gameObject.SetActive(false);
+            _isOpen = true;
+            _isFlagged = false;
             
-            capSprite.gameObject.SetActive(true);
+            flagSprite.gameObject.SetActive(false);
+            capSprite.gameObject.SetActive(false);
+        }
+        
+        public void SetFlag()
+        {
+            if(_isOpen)
+                return;
+            
+            flagSprite.gameObject.SetActive(!_isFlagged);
+            _isFlagged = !_isFlagged;
         }
     }
 }
