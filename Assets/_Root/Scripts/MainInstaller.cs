@@ -33,6 +33,7 @@ namespace MineSweeper
             Container.Bind<GridService>().FromInstance(gridService).AsSingle();
             Container.Bind<InputToCellService>().FromInstance(inputToCellService).AsSingle();
             Container.Bind<OpenCellService>().AsSingle();
+            Container.BindInterfacesAndSelfTo<LevelService>().AsSingle();
         }
     }
 }

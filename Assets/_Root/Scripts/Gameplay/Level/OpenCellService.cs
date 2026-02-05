@@ -11,23 +11,7 @@ namespace MineSweeper.Gameplay
         private GridService GridService { get; set; }
 
         public event Action OnMineCellClicked;
-        
-        public void OpenCell(int x, int y)
-        {
-            var gridCell = GridService.Grid[x,y];
-            if(gridCell.IsOpen || gridCell.IsFlagged)
-                return;
-            
-            if (!GridService.MinesGenerated)
-                GridService.GenerateMines(x, y);
-            
-            if(gridCell.State == CellState.Mine)
-                OnMineCellClicked?.Invoke();
-            else if(gridCell.State == CellState.Empty)
-                OpenEmptyCells(x, y);
-            else
-                gridCell.Open();
-        }
+        public event Action OnLevelCompleted;
         
         public void OpenCell(GridCell gridCell)
         {
@@ -37,18 +21,25 @@ namespace MineSweeper.Gameplay
             var position = gridCell.GridPosition;
             if (!GridService.MinesGenerated)
                 GridService.GenerateMines(position.x, position.y);
-            
-            if(gridCell.State == CellState.Mine)
+
+            if (gridCell.State == CellState.Mine)
+            {
+                gridCell.SetExplosiveMine();
+                OpenAllMines();
                 OnMineCellClicked?.Invoke();
+            }
             else if (gridCell.State == CellState.Empty)
                 OpenEmptyCells(position.x, position.y);
             else
                 gridCell.Open();
+
+            CheckLevelCompleted();
         }
 
         public void SetFlag(GridCell gridCell)
         {
             gridCell.SetFlag();
+            CheckLevelCompleted();
         }
 
         private void OpenEmptyCells(int startX, int startY)
@@ -97,6 +88,28 @@ namespace MineSweeper.Gameplay
                     }
                 }
             }
+        }
+
+        private void OpenAllMines()
+        {
+            var grid = GridService.Grid;
+            foreach (var cell in grid)
+            {
+                if (cell.State == CellState.Mine && !cell.IsFlagged)
+                    cell.Open();
+            }
+        }
+        
+        private void CheckLevelCompleted()
+        {
+            var grid = GridService.Grid;
+            foreach (var cell in grid)
+            {
+                if (!cell.IsOpen && !cell.IsFlagged)
+                    return;
+            }
+            
+            OnLevelCompleted?.Invoke();
         }
     }
 }

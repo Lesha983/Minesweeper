@@ -7,5 +7,8 @@ namespace MineSweeper.Input
     {
         event Action<Vector2> OnLeftClick;
         event Action<Vector2> OnRightClick;
+        
+        void Enable();
+        void Disable();
     }
 }

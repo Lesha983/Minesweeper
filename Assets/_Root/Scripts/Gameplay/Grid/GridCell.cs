@@ -12,6 +12,8 @@ namespace MineSweeper.Gameplay
 
     public class GridCell : MonoBehaviour
     {
+        [SerializeField]
+        private SpriteRenderer spriteRenderer;
         [SerializeField] 
         private TextMeshPro mineIndicatorLabel;
         [SerializeField]
@@ -37,6 +39,7 @@ namespace MineSweeper.Gameplay
             _isOpen = false;
             _isFlagged = false;
             _state = CellState.Empty;
+            spriteRenderer.color = Color.white;
             
             mineIndicatorLabel.gameObject.SetActive(false);
             mineSprite.gameObject.SetActive(false);
@@ -74,6 +77,11 @@ namespace MineSweeper.Gameplay
             
             flagSprite.gameObject.SetActive(!_isFlagged);
             _isFlagged = !_isFlagged;
+        }
+
+        public void SetExplosiveMine()
+        {
+            spriteRenderer.color = Color.red;
         }
     }
 }

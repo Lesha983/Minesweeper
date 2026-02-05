@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbcedeed1e3440329cfffaaddd53bc62, type: 3}
   m_Name: GridSettings
   m_EditorClassIdentifier: 
-  <GridWidth>k__BackingField: 10
-  <GridHeight>k__BackingField: 10
+  <GridWidth>k__BackingField: 15
+  <GridHeight>k__BackingField: 15
   <MineQuantity>k__BackingField: 10
   <CellPrefab>k__BackingField: {fileID: 7971214082970454734, guid: fde3ca371438640e5806d9919b81d1e6, type: 3}

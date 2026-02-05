@@ -33,18 +33,27 @@ namespace MineSweeper.Gameplay
             _width = GridSettings.GridWidth;
             _height = GridSettings.GridHeight;
             var prefab = GridSettings.CellPrefab;
-
+            var cellSize = prefab.transform.localScale.x;
             _grid = new GridCell[_width, _height];
+            _minesGenerated = false;
             
             for (var x = 0; x < _width; x++)
             {
                 for (var y = 0; y < _height; y++)
                 {
-                    var cell = Instantiator.InstantiatePrefabForComponent<GridCell>(prefab, new Vector3(x,y,0), Quaternion.identity, cellsParent);
+                    var cell = Instantiator.InstantiatePrefabForComponent<GridCell>(prefab, cellsParent);
+                    var targetPosition = new Vector2(x * cellSize, y * cellSize);
+                    cell.transform.position = targetPosition;
                     cell.Setup(x, y);
                     _grid[x, y] = cell;
                 }
             }
+            
+            var offsetX = _width * cellSize * 0.5f;
+            var offsetY = _height * cellSize * 0.5f;
+            var center = cellsParent.position;
+            center -= new Vector3(offsetX, offsetY, 0);;
+            cellsParent.position = center;
         }
 
         public void GenerateMines(int safeX, int safeY)
@@ -70,36 +79,6 @@ namespace MineSweeper.Gameplay
 
             CalculateNumbers();
             _minesGenerated = true;
-        }
-
-        // public void TryOpenNeighbours(int x, int y)
-        // {
-        //     var cell = _grid[x,y];
-        //     if(cell.State != CellState.Empty)
-        //         return;
-        //     
-        //     for (var dx = -1; dx <= 1; dx++)
-        //     {
-        //         for (var dy = -1; dy <= 1; dy++)
-        //         {
-        //             if (dx == 0 && dy == 0)
-        //                 continue;
-        //                     
-        //             var nx = x + dx;
-        //             var ny = y + dy;
-        //             if(nx < 0 || ny < 0 || nx >= _width || ny >= _height)
-        //                 continue;
-        //                     
-        //             var cell = _grid[x + dx, y + dy];
-        //             if (cell.State == CellState.Mine)
-        //                 count++;
-        //         }
-        //     }
-        // }
-
-        private void Awake()
-        {
-            CreateGrid();
         }
 
         private void CalculateNumbers()
