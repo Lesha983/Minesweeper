@@ -1,118 +1,105 @@
 namespace MineSweeper.Gameplay
 {
     using System;
+    using System.Collections.Generic;
     using UnityEngine;
     using Zenject;
     using Random = UnityEngine.Random;
 
-    public class GridService : MonoBehaviour
+    public class GridService
     {
         [Inject] 
         private GridSettings GridSettings { get; set; }
         [Inject]
-        private IInstantiator Instantiator { get; set; }
-        
-        [SerializeField]
-        private Transform cellsParent;
+        private CellsSpawner CellsSpawner { get; set; }
         
         public bool MinesGenerated => _minesGenerated;
-        public float CellSize => 1f;
-        public Transform CellsParent => cellsParent;
         public GridCell[,] Grid => _grid;
         
         private GridCell[,] _grid;
         private int _width;
         private int _height;
         private bool _minesGenerated;
+        private List<Vector2Int> _minesPositions = new();
 
         public void CreateGrid()
         {
             if (_grid != null)
                 DestroyGrid();
             
+            _minesGenerated = false;
             _width = GridSettings.GridWidth;
             _height = GridSettings.GridHeight;
-            var prefab = GridSettings.CellPrefab;
-            var cellSize = prefab.transform.localScale.x;
-            _grid = new GridCell[_width, _height];
-            _minesGenerated = false;
-            
-            for (var x = 0; x < _width; x++)
-            {
-                for (var y = 0; y < _height; y++)
-                {
-                    var cell = Instantiator.InstantiatePrefabForComponent<GridCell>(prefab, cellsParent);
-                    var targetPosition = new Vector2(x * cellSize, y * cellSize);
-                    cell.transform.position = targetPosition;
-                    cell.Setup(x, y);
-                    _grid[x, y] = cell;
-                }
-            }
-            
-            var offsetX = _width * cellSize * 0.5f;
-            var offsetY = _height * cellSize * 0.5f;
-            var center = cellsParent.position;
-            center -= new Vector3(offsetX, offsetY, 0);;
-            cellsParent.position = center;
+            _grid = CellsSpawner.CreateGrid(_width, _height);
         }
 
         public void GenerateMines(int safeX, int safeY)
         {
-            var placedMines = 0;
+            var availablePositions = GetAvailableMinePositions(safeX, safeY);
+            Shuffle(availablePositions);
             var targetMines = GridSettings.MineQuantity;
+            targetMines = Mathf.Clamp(targetMines, 0, availablePositions.Count);
 
-            while (placedMines < targetMines)
+            for (var i = 0; i < targetMines; i++)
             {
-                var x = Random.Range(0, _width);
-                var y = Random.Range(0, _height);
-                
-                if(x == safeX && y == safeY)
-                    continue;
-
-                var cell = _grid[x,y];
-                if(cell.State == CellState.Mine)
-                    continue;
-                
+                var position = availablePositions[i];
+                var cell = _grid[position.x, position.y];
                 cell.SetMineState();
-                placedMines++;
+                _minesPositions.Add(position);
             }
 
             CalculateNumbers();
             _minesGenerated = true;
         }
 
-        private void CalculateNumbers()
+        private List<Vector2Int> GetAvailableMinePositions(int safeX, int safeY)
         {
+            var result = new List<Vector2Int>();
             for (var x = 0; x < _width; x++)
             {
                 for (var y = 0; y < _height; y++)
                 {
-                    var gridCell = _grid[x, y];
-                    if (gridCell.State == CellState.Mine)
+                    if (x == safeX && y == safeY)
                         continue;
+                    
+                    result.Add(new Vector2Int(x, y));
+                }
+            }
+            
+            return result;
+        }
+        
+        private void Shuffle<T>(List<T> list)
+        {
+            for (var i = list.Count - 1; i > 0; i--)
+            {
+                var j = Random.Range(0, i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
+        }
 
-                    var count = 0;
-
-                    for (var dx = -1; dx <= 1; dx++)
+        private void CalculateNumbers()
+        {
+            foreach (var minesPosition in _minesPositions)
+            {
+                for (var dx = -1; dx <= 1; dx++)
+                {
+                    for (var dy = -1; dy <= 1; dy++)
                     {
-                        for (var dy = -1; dy <= 1; dy++)
-                        {
-                            if (dx == 0 && dy == 0)
-                                continue;
+                        if (dx == 0 && dy == 0)
+                            continue;
                             
-                            var nx = x + dx;
-                            var ny = y + dy;
-                            if(nx < 0 || ny < 0 || nx >= _width || ny >= _height)
-                                continue;
+                        var nx = minesPosition.x + dx;
+                        var ny = minesPosition.y + dy;
+                        if(nx < 0 || ny < 0 || nx >= _width || ny >= _height)
+                            continue;
                             
-                            var cell = _grid[x + dx, y + dy];
-                            if (cell.State == CellState.Mine)
-                                count++;
-                        }
+                        var cell = _grid[nx, ny];
+                        if(cell.State == CellState.Mine)
+                            continue;
+                        
+                        cell.AddMineToNeighbors();
                     }
-
-                    if (count > 0)
-                        gridCell.SetNumericState(count);
                 }
             }
         }
@@ -121,7 +108,7 @@ namespace MineSweeper.Gameplay
         {
             foreach (var cell in _grid)
             {
-                Destroy(cell.gameObject);
+                cell.Destroy();
             }
             _grid = null;
         }

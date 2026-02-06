@@ -32,6 +32,7 @@ namespace MineSweeper.Gameplay
         private bool _isFlagged;
         private bool _isOpen;
         private Vector2Int _position;
+        private int _mineCount;
 
         public void Setup(int x, int y)
         {
@@ -40,6 +41,7 @@ namespace MineSweeper.Gameplay
             _isFlagged = false;
             _state = CellState.Empty;
             spriteRenderer.color = Color.white;
+            _mineCount = 0;
             
             mineIndicatorLabel.gameObject.SetActive(false);
             mineSprite.gameObject.SetActive(false);
@@ -58,6 +60,14 @@ namespace MineSweeper.Gameplay
         {
             _state = CellState.Numeric;
             mineIndicatorLabel.text = value.ToString();
+            mineIndicatorLabel.gameObject.SetActive(true);
+        }
+
+        public void AddMineToNeighbors()
+        {
+            _state = CellState.Numeric;
+            _mineCount++;
+            mineIndicatorLabel.text = _mineCount.ToString();
             mineIndicatorLabel.gameObject.SetActive(true);
         }
 
@@ -82,6 +92,11 @@ namespace MineSweeper.Gameplay
         public void SetExplosiveMine()
         {
             spriteRenderer.color = Color.red;
+        }
+
+        public void Destroy()
+        {
+            Destroy(gameObject);
         }
     }
 }
