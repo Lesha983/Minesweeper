@@ -7,11 +7,11 @@ namespace MineSweeper.Gameplay
     public class LevelService : IInitializable, IDisposable
     {
         [Inject]
-        private GridService GridService { get; set; }
-        [Inject]
         private IInputProvider InputProvider { get; set; }
         [Inject]
         private OpenCellService OpenCellService { get; set; }
+        [Inject]
+        private GridService GridService { get; set; }
         
         public event Action OnLevelCompleted;
         public event Action OnLevelFailed;
@@ -19,38 +19,47 @@ namespace MineSweeper.Gameplay
         
         public void Initialize()
         {
+            GridService.OnGridCreated += GridCreated;
+            
+            OpenCellService.OnFirstCellClicked += StartLevel;
             OpenCellService.OnMineCellClicked += Lose;
             OpenCellService.OnLevelCompleted += Win;
         }
 
         public void Dispose()
         {
+            GridService.OnGridCreated -= GridCreated;
+            
+            OpenCellService.OnFirstCellClicked -= StartLevel;
             OpenCellService.OnMineCellClicked -= Lose;
             OpenCellService.OnLevelCompleted -= Win;
         }
 
         public void StartLevel()
         {
-            InputProvider.Enable();
-            GridService.CreateGrid();
             OnLevelStarted?.Invoke();
         }
-        
-        public void EndLevel()
+
+        private void GridCreated()
         {
-            InputProvider.Disable();
+            InputProvider.Enable();
         }
-        
+
         private void Lose()
         {
             EndLevel();
             OnLevelFailed?.Invoke();
         }
-        
+
         private void Win()
         {
             EndLevel();
             OnLevelCompleted?.Invoke();
+        }
+
+        private void EndLevel()
+        {
+            InputProvider.Disable();
         }
     }
 }

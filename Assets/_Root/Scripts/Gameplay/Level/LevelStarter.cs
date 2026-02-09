@@ -10,7 +10,7 @@ namespace MineSweeper.Gameplay
         
         private void Start()
         {
-            LevelService.StartLevel();
+            // LevelService.StartLevel();
         }
     }
 }

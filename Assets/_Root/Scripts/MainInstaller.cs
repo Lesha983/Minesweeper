@@ -8,7 +8,7 @@ namespace MineSweeper
     public class MainInstaller : MonoInstaller
     {
         [SerializeField]
-        private CellsSpawner cellsSpawner;
+        private CellsGrid cellsGrid;
         [SerializeField]
         private InputToCellService inputToCellService;
         
@@ -31,9 +31,9 @@ namespace MineSweeper
             Container.BindInterfacesAndSelfTo<InputProvider>().AsSingle();
             
             Container.Bind<GridService>().AsSingle();
-            Container.Bind<CellsSpawner>().FromInstance(cellsSpawner).AsSingle();
-            Container.Bind<InputToCellService>().FromInstance(inputToCellService).AsSingle();
-            Container.Bind<OpenCellService>().AsSingle();
+            Container.Bind<CellsGrid>().FromInstance(cellsGrid).AsSingle();
+            Container.Bind<IInputToCell>().FromInstance(inputToCellService).AsSingle();
+            Container.BindInterfacesAndSelfTo<OpenCellService>().AsSingle();
             Container.BindInterfacesAndSelfTo<LevelService>().AsSingle();
         }
     }

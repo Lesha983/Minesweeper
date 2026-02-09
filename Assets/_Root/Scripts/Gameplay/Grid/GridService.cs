@@ -8,48 +8,59 @@ namespace MineSweeper.Gameplay
 
     public class GridService
     {
-        [Inject] 
-        private GridSettings GridSettings { get; set; }
         [Inject]
-        private CellsSpawner CellsSpawner { get; set; }
+        private CellsGrid CellsGrid { get; set; }
         
-        public bool MinesGenerated => _minesGenerated;
-        public GridCell[,] Grid => _grid;
+        public event Action OnGridCreated;
         
-        private GridCell[,] _grid;
+        public bool MinesGenerated => _minesPositions.Count > 0;
+        public Cell[,] Cells => _cells;
+        public int MineQuantity => _mineQuantity;
+        
+        private Cell[,] _cells;
         private int _width;
         private int _height;
-        private bool _minesGenerated;
         private List<Vector2Int> _minesPositions = new();
+        private int _mineQuantity;
 
-        public void CreateGrid()
+        public void CreateGrid(int width, int height, int mineQuantity)
         {
-            if (_grid != null)
+            if (_cells != null)
                 DestroyGrid();
             
-            _minesGenerated = false;
-            _width = GridSettings.GridWidth;
-            _height = GridSettings.GridHeight;
-            _grid = CellsSpawner.CreateGrid(_width, _height);
+            _minesPositions.Clear();
+            _width = width;
+            _height = height;
+            _mineQuantity = mineQuantity;
+            _cells = CellsGrid.Create(_width, _height);
+            OnGridCreated?.Invoke();
+        }
+
+        public void ResetGrid()
+        {
+            if (_cells != null)
+                DestroyGrid();
+            
+            _minesPositions.Clear();
+            _cells = CellsGrid.Create(_width, _height);
+            OnGridCreated?.Invoke();
         }
 
         public void GenerateMines(int safeX, int safeY)
         {
             var availablePositions = GetAvailableMinePositions(safeX, safeY);
             Shuffle(availablePositions);
-            var targetMines = GridSettings.MineQuantity;
-            targetMines = Mathf.Clamp(targetMines, 0, availablePositions.Count);
+            _mineQuantity = Mathf.Clamp(_mineQuantity, 0, availablePositions.Count);
 
-            for (var i = 0; i < targetMines; i++)
+            for (var i = 0; i < _mineQuantity; i++)
             {
                 var position = availablePositions[i];
-                var cell = _grid[position.x, position.y];
+                var cell = _cells[position.x, position.y];
                 cell.SetMineState();
                 _minesPositions.Add(position);
             }
 
             CalculateNumbers();
-            _minesGenerated = true;
         }
 
         private List<Vector2Int> GetAvailableMinePositions(int safeX, int safeY)
@@ -94,7 +105,7 @@ namespace MineSweeper.Gameplay
                         if(nx < 0 || ny < 0 || nx >= _width || ny >= _height)
                             continue;
                             
-                        var cell = _grid[nx, ny];
+                        var cell = _cells[nx, ny];
                         if(cell.State == CellState.Mine)
                             continue;
                         
@@ -106,11 +117,11 @@ namespace MineSweeper.Gameplay
 
         private void DestroyGrid()
         {
-            foreach (var cell in _grid)
+            foreach (var cell in _cells)
             {
                 cell.Destroy();
             }
-            _grid = null;
+            _cells = null;
         }
     }
 }

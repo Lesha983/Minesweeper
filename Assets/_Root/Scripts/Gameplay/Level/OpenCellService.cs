@@ -5,48 +5,100 @@ namespace MineSweeper.Gameplay
     using UnityEngine;
     using Zenject;
 
-    public class OpenCellService
+    public class OpenCellService : IInitializable, IDisposable
     {
         [Inject]
         private GridService GridService { get; set; }
+        [Inject]
+        private IInputToCell InputToCell { get; set; }
 
         public event Action OnMineCellClicked;
         public event Action OnLevelCompleted;
+        public event Action OnFlagsChanged;
+        public event Action OnFirstCellClicked;
         
-        public void OpenCell(GridCell gridCell)
+        public int MineQuantity => GridService.MineQuantity;
+        public int FlagsQuantity => _flagsQuantity;
+
+        private int _flagsQuantity;
+        private bool _levelStarted;
+
+        public void Initialize()
         {
-            if(gridCell.IsOpen || gridCell.IsFlagged)
+            GridService.OnGridCreated += Reset;
+            InputToCell.OnTryOpenCell += OpenCell;
+            InputToCell.OnTrySetFlag += SetFlag;
+        }
+        
+        public void Dispose()
+        {
+            GridService.OnGridCreated -= Reset;
+            InputToCell.OnTryOpenCell -= OpenCell;
+            InputToCell.OnTrySetFlag -= SetFlag;
+        }
+
+        private void Reset()
+        {
+            _flagsQuantity = 0;
+            _levelStarted = false;
+            OnFlagsChanged?.Invoke();
+        }
+
+        private void OpenCell(Cell cell)
+        {
+            if(cell.IsOpen || cell.IsFlagged)
                 return;
 
-            var position = gridCell.GridPosition;
+            var position = cell.GridPosition;
             if (!GridService.MinesGenerated)
                 GridService.GenerateMines(position.x, position.y);
 
-            if (gridCell.State == CellState.Mine)
+            if (cell.State == CellState.Mine)
             {
-                gridCell.SetExplosiveMine();
+                cell.SetExplosiveMine();
                 OpenAllMines();
                 OnMineCellClicked?.Invoke();
+                return;
             }
-            else if (gridCell.State == CellState.Empty)
+            else if (cell.State == CellState.Empty)
                 OpenEmptyCells(position.x, position.y);
             else
-                gridCell.Open();
+                cell.Open();
 
-            CheckLevelCompleted();
+            if(!_levelStarted)
+                OnFirstClicked();
+            
+            CheckLevelState();
         }
 
-        public void SetFlag(GridCell gridCell)
+        private void SetFlag(Cell cell)
         {
-            gridCell.SetFlag();
-            CheckLevelCompleted();
+            if(cell.IsFlagged)
+                _flagsQuantity--;
+            else if(_flagsQuantity >= MineQuantity)
+                return;
+            else
+                _flagsQuantity++;
+
+            if (!_levelStarted)
+                OnFirstClicked();
+            
+            cell.SetFlag();
+            CheckLevelState();
+            OnFlagsChanged?.Invoke();
+        }
+
+        private void OnFirstClicked()
+        {
+            _levelStarted = true;
+            OnFirstCellClicked?.Invoke();
         }
 
         private void OpenEmptyCells(int startX, int startY)
         {
             var queue = new Queue<Vector2Int>();
             queue.Enqueue(new Vector2Int(startX, startY));
-            var grid = GridService.Grid;
+            var grid = GridService.Cells;
             var width = grid.GetLength(0);
             var height = grid.GetLength(1);
 
@@ -92,7 +144,7 @@ namespace MineSweeper.Gameplay
 
         private void OpenAllMines()
         {
-            var grid = GridService.Grid;
+            var grid = GridService.Cells;
             foreach (var cell in grid)
             {
                 if (cell.State == CellState.Mine && !cell.IsFlagged)
@@ -100,9 +152,9 @@ namespace MineSweeper.Gameplay
             }
         }
         
-        private void CheckLevelCompleted()
+        private void CheckLevelState()
         {
-            var grid = GridService.Grid;
+            var grid = GridService.Cells;
             foreach (var cell in grid)
             {
                 if (!cell.IsOpen && !cell.IsFlagged)

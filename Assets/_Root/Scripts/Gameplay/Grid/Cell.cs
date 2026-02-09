@@ -2,6 +2,7 @@ namespace MineSweeper.Gameplay
 {
     using TMPro;
     using UnityEngine;
+    using UnityEngine.UI;
 
     public enum CellState
     {
@@ -10,18 +11,18 @@ namespace MineSweeper.Gameplay
         Numeric,
     }
 
-    public class GridCell : MonoBehaviour
+    public class Cell : MonoBehaviour
     {
         [SerializeField]
-        private SpriteRenderer spriteRenderer;
+        private Image spriteRenderer;
         [SerializeField] 
-        private TextMeshPro mineIndicatorLabel;
+        private TMP_Text mineIndicatorLabel;
         [SerializeField]
-        private SpriteRenderer mineSprite;
+        private Image mineSprite;
         [SerializeField]
-        private SpriteRenderer capSprite;
+        private Image capSprite;
         [SerializeField]
-        private SpriteRenderer flagSprite;
+        private Image flagSprite;
         
         public CellState State => _state;
         public bool IsOpen => _isOpen;
